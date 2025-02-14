@@ -1,6 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:notesapp/auth/auth.dart';
+import 'package:notesapp/auth/auth_helper.dart';
+import 'package:notesapp/auth/main_page.dart';
+import 'package:notesapp/pages/home_page.dart';
 import 'package:notesapp/services/firestore.dart';
 
 class LoginPage extends StatefulWidget {
@@ -21,6 +25,11 @@ class _LoginPageState extends State<LoginPage> {
     FirebaseAuth.instance.signInWithEmailAndPassword(
       email: _emailController.text.trim(),
       password: _passwordController.text.trim(),
+    );
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (context) => MainPage(),
+      ),
     );
   }
 
@@ -166,7 +175,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
 
               SizedBox(
-                height: 30,
+                height: 20,
               ),
 
               GestureDetector(
@@ -179,6 +188,37 @@ class _LoginPageState extends State<LoginPage> {
                       style: TextStyle(
                         color: Colors.blue.shade100,
                         fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              SizedBox(
+                height: 30,
+              ),
+
+              GestureDetector(
+                onTap: () {
+                  AuthHelper.setGuestMode(true);
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                      builder: (context) => MainPage(),
+                    ),
+                  );
+                },
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20),
+                      child: Text(
+                        'Continue as a Guest',
+                        style: TextStyle(
+                          color: Colors.blue.shade100,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 10,
+                        ),
                       ),
                     ),
                   ],

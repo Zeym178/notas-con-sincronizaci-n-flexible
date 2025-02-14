@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:notesapp/auth/auth.dart';
+import 'package:notesapp/auth/auth_helper.dart';
 import 'package:notesapp/pages/home_page.dart';
 
 class MainPage extends StatefulWidget {
@@ -17,9 +18,22 @@ class _MainPageState extends State<MainPage> {
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
-          return HomePage();
+          return HomePage(
+            isGuest: false,
+          );
         } else {
-          return AuthPage();
+          return FutureBuilder<bool>(
+            future: AuthHelper.isGuestMode(),
+            builder: (context, snapshot) {
+              if (snapshot.hasData && snapshot.data!) {
+                return HomePage(
+                  isGuest: true,
+                );
+              } else {
+                return AuthPage();
+              }
+            },
+          );
         }
       },
     );
