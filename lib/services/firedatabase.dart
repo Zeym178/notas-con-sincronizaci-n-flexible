@@ -7,10 +7,11 @@ class Firedatabase {
   final CollectionReference users =
       FirebaseFirestore.instance.collection('users');
 
-  Future addNote(String note) async {
+  Future addNote(String title, String note) async {
     return await users.doc(currentUser!.email).collection('notes').add({
       'user': currentUser!.email,
-      'note': note,
+      'content': note,
+      'title': title,
       'TimeStamp': Timestamp.now(),
     });
   }

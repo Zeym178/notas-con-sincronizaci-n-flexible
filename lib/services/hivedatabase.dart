@@ -1,30 +1,40 @@
+import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:hive/hive.dart';
 
 class Hivedatabase {
   final Box _notesBox = Hive.box('notes');
+  final _notesStreamController =
+      StreamController<List<Map<String, dynamic>>>.broadcast();
 
-  Future addNote(String content) async {
-    // Map<String, dynamic> note = {
-    //   // 'id': DateTime.now().millisecondsSinceEpoch.toString(), // Unique ID
-    //   'content': content,
-    //   // 'timestamp': DateTime.now(),
-    // };
-    return await _notesBox.add({'content': content});
-  }
-
-  List<Map<String, dynamic>> getNotes() {
-    final data = _notesBox.keys.map(
-      (key) {
-        final item = _notesBox.get(key);
-        return {
-          'content': item['content'],
-        };
+  Future addNote(String title, String content, bool isSync) async {
+    await _notesBox.add(
+      {
+        'title': title,
+        'content': content,
+        'isSync': isSync,
+        'timestamp': Timestamp.now().toString(),
       },
-    ).toList();
-    return data.reversed.toList();
+    );
+    emitNotes();
   }
 
-  Stream<List<Map<String, dynamic>>> getNotesStream() {
-    return _notesBox.watch().map((_) => getNotes());
+  void emitNotes() {
+    final notes = _notesBox.values.toList().cast<Map<String, dynamic>>();
+    _notesStreamController.add(notes);
+  }
+
+  Stream<List<Map<String, dynamic>>> getNoteStream() {
+    emitNotes();
+    return _notesStreamController.stream;
+  }
+
+  Future<void> clear() async {
+    await _notesBox.clear();
+    emitNotes();
+  }
+
+  void dispose() {
+    _notesStreamController.close();
   }
 }

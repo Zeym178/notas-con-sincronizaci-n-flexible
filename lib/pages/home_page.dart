@@ -21,31 +21,40 @@ class _HomePageState extends State<HomePage> {
   final Firedatabase firedatabase = Firedatabase();
   final Hivedatabase hivedatabase = Hivedatabase();
   final _noteController = TextEditingController();
+  final _titleController = TextEditingController();
 
   final Box _notesBox = Hive.box('notes');
 
   void addNote() {
-    addNote1({'content': _noteController.text});
-
+    if (widget.isGuest) {
+      hivedatabase.addNote(
+        _titleController.text,
+        _noteController.text,
+        false,
+      );
+    } else {
+      firedatabase.addNote(
+        _titleController.text,
+        _noteController.text,
+      );
+    }
     _noteController.clear();
-  }
-
-  // FALTA AGREGAR CRUD WITH HIVE !!!f slkajflks
-
-  Future<void> addNote1(Map<String, dynamic> content) async {
-    // Map<String, dynamic> note = {
-    //   // 'id': DateTime.now().millisecondsSinceEpoch.toString(), // Unique ID
-    //   'content': content,
-    //   // 'timestamp': DateTime.now(),
-    // };
-    await _notesBox.add(content['content']);
+    _titleController.clear();
   }
 
   @override
   void dispose() {
     // TODO: implement dispose
     _noteController.dispose();
+    _titleController.dispose();
+    hivedatabase.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
   }
 
   @override
@@ -66,27 +75,73 @@ class _HomePageState extends State<HomePage> {
     if (!widget.isGuest) {
       return _firebaseNoteStream();
     } else {
-      return StreamBuilder(
-        stream: hivedatabase.getNotesStream(),
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            final localnotes = snapshot.data!;
-            return ListView.builder(
-              itemCount: localnotes.length,
-              itemBuilder: (context, index) {
-                return ListTile(
-                  title: Text(localnotes[index]['content']),
-                );
-              },
-            );
-          } else {
-            return Center(
-              child: Text('No Data found!'),
-            );
-          }
-        },
+      return Expanded(
+        child: StreamBuilder(
+          stream: hivedatabase.getNoteStream(),
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              final items = snapshot.data!;
+              return ListView.builder(
+                itemCount: items.length,
+                itemBuilder: (context, index) {
+                  String title = items[index]['title'];
+                  String content = items[index]['content'];
+                  return _noteWidget(title, content, index);
+                },
+              );
+            } else {
+              return Text('nose');
+            }
+          },
+        ),
       );
     }
+  }
+
+  Container _noteWidget(String title, String content, int index) {
+    return Container(
+      height: 80,
+      alignment: Alignment.centerLeft,
+      margin: EdgeInsets.symmetric(vertical: 5, horizontal: 20),
+      decoration: BoxDecoration(
+        color: Colors.grey[800],
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.only(
+              top: 5,
+              left: 10,
+              right: 20,
+            ),
+            child: Text(
+              title,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          Divider(
+            thickness: 1,
+            color: Colors.white.withOpacity(0.5),
+            indent: 10,
+            endIndent: 10,
+          ),
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(
+                bottom: 5,
+                left: 10,
+                right: 20,
+              ),
+              child: Text(content),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Expanded _firebaseNoteStream() {
@@ -107,9 +162,9 @@ class _HomePageState extends State<HomePage> {
             return ListView.builder(
               itemCount: usernotes.length,
               itemBuilder: (context, index) {
-                return ListTile(
-                  title: Text(usernotes[index]['note']),
-                );
+                String title = usernotes[index]['title'];
+                String content = usernotes[index]['content'];
+                return _noteWidget(title, content, index);
               },
             );
           } else {
@@ -160,8 +215,19 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       Container(
                         child: TextField(
+                          controller: _titleController,
+                          decoration: InputDecoration(
+                            hintText: 'Title',
+                          ),
+                        ),
+                      ),
+                      Container(
+                        child: TextField(
                           controller: _noteController,
                           maxLines: null,
+                          decoration: InputDecoration(
+                            hintText: 'Content',
+                          ),
                         ),
                       ),
                     ],
@@ -219,6 +285,12 @@ class _HomePageState extends State<HomePage> {
             Icons.exit_to_app,
             color: Colors.white,
           ),
+        ),
+        ElevatedButton(
+          onPressed: () async {
+            await hivedatabase.clear();
+          },
+          child: Icon(Icons.cancel),
         ),
       ],
     );
