@@ -5,6 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:hive/hive.dart';
 import 'package:notesapp/auth/auth.dart';
 import 'package:notesapp/auth/auth_helper.dart';
+import 'package:notesapp/pages/note_page.dart';
 import 'package:notesapp/pages/profile_page.dart';
 import 'package:notesapp/services/firedatabase.dart';
 import 'package:notesapp/services/hivedatabase.dart';
@@ -20,42 +21,6 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final Firedatabase firedatabase = Firedatabase();
   final Hivedatabase hivedatabase = Hivedatabase();
-  final _noteController = TextEditingController();
-  final _titleController = TextEditingController();
-
-  final Box _notesBox = Hive.box('notes');
-
-  void addNote() {
-    if (widget.isGuest) {
-      hivedatabase.addNote(
-        _titleController.text,
-        _noteController.text,
-        false,
-      );
-    } else {
-      firedatabase.addNote(
-        _titleController.text,
-        _noteController.text,
-      );
-    }
-    _noteController.clear();
-    _titleController.clear();
-  }
-
-  @override
-  void dispose() {
-    // TODO: implement dispose
-    _noteController.dispose();
-    _titleController.dispose();
-    hivedatabase.dispose();
-    super.dispose();
-  }
-
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -77,6 +42,7 @@ class _HomePageState extends State<HomePage> {
     } else {
       return Expanded(
         child: StreamBuilder(
+          initialData: hivedatabase.getInitialNotes(),
           stream: hivedatabase.getNoteStream(),
           builder: (context, snapshot) {
             if (snapshot.hasData) {
@@ -86,7 +52,8 @@ class _HomePageState extends State<HomePage> {
                 itemBuilder: (context, index) {
                   String title = items[index]['title'];
                   String content = items[index]['content'];
-                  return _noteWidget(title, content, index);
+                  var note_id = items[index]['id'];
+                  return _noteWidget(note_id, title, content, index);
                 },
               );
             } else {
@@ -98,48 +65,66 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Container _noteWidget(String title, String content, int index) {
-    return Container(
-      height: 80,
-      alignment: Alignment.centerLeft,
-      margin: EdgeInsets.symmetric(vertical: 5, horizontal: 20),
-      decoration: BoxDecoration(
-        color: Colors.grey[800],
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: EdgeInsets.only(
-              top: 5,
-              left: 10,
-              right: 20,
-            ),
-            child: Text(
-              title,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
+  GestureDetector _noteWidget(var id, String title, String content, int index) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => NotePage(
+              firedatabase: firedatabase,
+              hivedatabase: hivedatabase,
+              isGuest: widget.isGuest,
+              note: {
+                'id': id,
+                'title': title,
+                'content': content,
+              },
             ),
           ),
-          Divider(
-            thickness: 1,
-            color: Colors.white.withOpacity(0.5),
-            indent: 10,
-            endIndent: 10,
-          ),
-          Expanded(
-            child: Padding(
+        );
+      },
+      child: Container(
+        height: 80,
+        alignment: Alignment.centerLeft,
+        margin: EdgeInsets.symmetric(vertical: 5, horizontal: 20),
+        decoration: BoxDecoration(
+          color: Colors.grey[800],
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
               padding: EdgeInsets.only(
-                bottom: 5,
+                top: 5,
                 left: 10,
                 right: 20,
               ),
-              child: Text(content),
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
-          ),
-        ],
+            Divider(
+              thickness: 1,
+              color: Colors.white.withOpacity(0.5),
+              indent: 10,
+              endIndent: 10,
+            ),
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  bottom: 5,
+                  left: 10,
+                  right: 20,
+                ),
+                child: Text(content),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -164,7 +149,8 @@ class _HomePageState extends State<HomePage> {
               itemBuilder: (context, index) {
                 String title = usernotes[index]['title'];
                 String content = usernotes[index]['content'];
-                return _noteWidget(title, content, index);
+                var note_id = usernotes[index]['id'];
+                return _noteWidget(note_id, title, content, index);
               },
             );
           } else {
@@ -180,62 +166,19 @@ class _HomePageState extends State<HomePage> {
   FloatingActionButton _floatingActionButton(BuildContext context) {
     return FloatingActionButton(
       onPressed: () {
-        showDialog(
-          context: context,
-          builder: (context) {
-            return SingleChildScrollView(
-              child: AlertDialog(
-                title: Text('Add Note'),
-                actions: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      ElevatedButton(
-                        onPressed: () {
-                          _noteController.clear();
-                          Navigator.of(context).pop();
-                        },
-                        child: Text('Cancel'),
-                      ),
-                      SizedBox(
-                        width: 20,
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          addNote();
-                          Navigator.of(context).pop();
-                        },
-                        child: Text('Add'),
-                      ),
-                    ],
-                  ),
-                ],
-                content: Container(
-                  child: Column(
-                    children: [
-                      Container(
-                        child: TextField(
-                          controller: _titleController,
-                          decoration: InputDecoration(
-                            hintText: 'Title',
-                          ),
-                        ),
-                      ),
-                      Container(
-                        child: TextField(
-                          controller: _noteController,
-                          maxLines: null,
-                          decoration: InputDecoration(
-                            hintText: 'Content',
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => NotePage(
+              firedatabase: firedatabase,
+              hivedatabase: hivedatabase,
+              isGuest: widget.isGuest,
+              note: {
+                'id': '',
+                'title': '',
+                'content': '',
+              },
+            ),
+          ),
         );
       },
       backgroundColor: Colors.grey[700],

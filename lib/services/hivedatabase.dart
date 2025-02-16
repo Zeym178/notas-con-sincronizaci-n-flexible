@@ -20,13 +20,25 @@ class Hivedatabase {
   }
 
   void emitNotes() {
-    final notes = _notesBox.values.toList().cast<Map<String, dynamic>>();
+    final notes = _notesBox.values
+        .map<Map<String, dynamic>>(
+          (e) => Map<String, dynamic>.from(e),
+        )
+        .toList();
     _notesStreamController.add(notes);
   }
 
   Stream<List<Map<String, dynamic>>> getNoteStream() {
     emitNotes();
     return _notesStreamController.stream;
+  }
+
+  List<Map<String, dynamic>> getInitialNotes() {
+    return _notesBox.values
+        .map<Map<String, dynamic>>(
+          (e) => Map<String, dynamic>.from(e),
+        )
+        .toList();
   }
 
   Future<void> clear() async {
