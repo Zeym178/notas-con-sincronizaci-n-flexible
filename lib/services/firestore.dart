@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 
 class FirestoreService {
   final CollectionReference userInfo =
@@ -17,13 +18,17 @@ class FirestoreService {
       );
 
       if (userCredential.user != null) {
-        await userInfo.doc(userCredential.user!.email).set({
-          'username': userName,
-          'email': email,
-        });
+        await userInfo.doc(userCredential.user!.email).set(
+          {
+            'username': userName,
+            'email': email,
+          },
+        );
       }
     }
   }
+
+  
 
   Future getUserInfo() async {
     return await FirebaseFirestore.instance

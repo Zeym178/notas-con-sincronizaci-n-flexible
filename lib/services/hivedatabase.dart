@@ -19,6 +19,23 @@ class Hivedatabase {
     emitNotes();
   }
 
+  Future<void> updateNote(var id, String title, String content) async {
+    await _notesBox.putAt(
+      id,
+      {
+        'title': title,
+        'content': content,
+        'timestamp': Timestamp.now().toString(),
+      },
+    );
+    emitNotes();
+  }
+
+  Future<void> deleteNote(var id) async {
+    await _notesBox.deleteAt(id);
+    emitNotes();
+  }
+
   void emitNotes() {
     final notes = _notesBox.values
         .map<Map<String, dynamic>>(

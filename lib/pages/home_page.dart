@@ -22,6 +22,14 @@ class _HomePageState extends State<HomePage> {
   final Firedatabase firedatabase = Firedatabase();
   final Hivedatabase hivedatabase = Hivedatabase();
 
+  void deleteNote(var id) {
+    if (widget.isGuest) {
+      hivedatabase.deleteNote(id);
+    } else {
+      firedatabase.deleteNote(id);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -52,7 +60,7 @@ class _HomePageState extends State<HomePage> {
                 itemBuilder: (context, index) {
                   String title = items[index]['title'];
                   String content = items[index]['content'];
-                  var note_id = items[index]['id'];
+                  var note_id = index;
                   return _noteWidget(note_id, title, content, index);
                 },
               );
@@ -81,6 +89,35 @@ class _HomePageState extends State<HomePage> {
               },
             ),
           ),
+        );
+      },
+      onLongPress: () {
+        showModalBottomSheet(
+          context: context,
+          builder: (context) {
+            return Container(
+              decoration: BoxDecoration(
+                boxShadow: [
+                  BoxShadow(
+                    spreadRadius: 0,
+                  ),
+                ],
+              ),
+              child: GestureDetector(
+                onTap: () {
+                  deleteNote(id);
+                  Navigator.pop(context);
+                },
+                child: Container(
+                  color: Colors.red,
+                  height: 50,
+                  child: Center(
+                    child: Icon(Icons.delete),
+                  ),
+                ),
+              ),
+            );
+          },
         );
       },
       child: Container(
@@ -149,7 +186,7 @@ class _HomePageState extends State<HomePage> {
               itemBuilder: (context, index) {
                 String title = usernotes[index]['title'];
                 String content = usernotes[index]['content'];
-                var note_id = usernotes[index]['id'];
+                var note_id = usernotes[index].id;
                 return _noteWidget(note_id, title, content, index);
               },
             );

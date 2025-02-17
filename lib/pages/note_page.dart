@@ -44,6 +44,22 @@ class _NotePageState extends State<NotePage> {
     _titleController.clear();
   }
 
+  void updateNote() {
+    if (widget.isGuest) {
+      widget.hivedatabase.updateNote(
+        note_id,
+        note_title,
+        note_content,
+      );
+    } else {
+      widget.firedatabase.updateNote(
+        note_id,
+        note_title,
+        note_content,
+      );
+    }
+  }
+
   @override
   void dispose() {
     // TODO: implement dispose
@@ -73,7 +89,11 @@ class _NotePageState extends State<NotePage> {
         actions: [
           GestureDetector(
             onTap: () {
-              addNote();
+              if (note_id.toString().isEmpty) {
+                addNote();
+              } else {
+                updateNote();
+              }
               Navigator.pop(context);
             },
             child: Container(

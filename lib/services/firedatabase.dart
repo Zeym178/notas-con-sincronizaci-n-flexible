@@ -24,4 +24,26 @@ class Firedatabase {
         .snapshots();
     return notesStream;
   }
+
+  Future<void> updateNote(var id, String title, String content) async {
+    return await users
+        .doc(currentUser!.email)
+        .collection('notes')
+        .doc(id)
+        .update(
+      {
+        'title': title,
+        'content': content,
+        'TimeStamp': Timestamp.now(),
+      },
+    );
+  }
+
+  Future<void> deleteNote(var id) async {
+    return await users
+        .doc(currentUser!.email)
+        .collection('notes')
+        .doc(id)
+        .delete();
+  }
 }
