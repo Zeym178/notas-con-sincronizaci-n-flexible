@@ -8,16 +8,7 @@ import 'package:notesapp/auth/main_page.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   if (kIsWeb) {
-    await Firebase.initializeApp(
-      options: const FirebaseOptions(
-        apiKey: 'AIzaSyAqxAwMVX9ZxLbovthwVkl3sYDIn1rRRe0',
-        authDomain: 'zeym-s-notes-app.firebaseapp.com',
-        appId: '1:455650982872:web:cf646af459194c9d8190ad',
-        messagingSenderId: '455650982872',
-        projectId: 'zeym-s-notes-app',
-        storageBucket: 'zeym-s-notes-app.firebasestorage.app',
-      ),
-    );
+    // datos para connection con firebase
   } else {
     await Firebase.initializeApp();
   }
